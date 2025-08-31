@@ -1,51 +1,47 @@
 // api/signature.js
 const crypto = require('crypto');
 
-module.exports = (req, res) => {
-  // CORS 설정 (Make.com에서 접근 가능하도록)
+export default function handler(req, res) {
+  // CORS 설정
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // OPTIONS 요청 처리
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
   try {
-    // POST 요청만 허용
-    if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'Method not allowed' });
-    }
+    const { timestamp, accessKey, secretKey, method = 'GET', uri = '/api/signature' } = req.query;
 
-    const { secret, message } = req.body;
-
-    // 필수 파라미터 확인
-    if (!secret || !message) {
-      return res.status(400).json({ 
-        error: 'Missing required parameters: secret and message' 
+    if (!timestamp || !accessKey || !secretKey) {
+      return res.status(400).json({
+        error: 'Missing required parameters: timestamp, accessKey, secretKey'
       });
     }
 
+    // 네이버 클라우드 플랫폼 서명 생성
+    const space = ' ';
+    const newLine = '\n';
+    const url = uri;
+    const message = method + space + url + newLine + timestamp + newLine + accessKey;
+    
     // HMAC-SHA256 서명 생성
     const signature = crypto
-      .createHmac('sha256', secret)
+      .createHmac('sha256', secretKey)
       .update(message)
       .digest('base64');
 
-    // 결과 반환
-    res.status(200).json({
+    return res.status(200).json({
       signature: signature,
-      message: message,
-      timestamp: new Date().toISOString()
+      timestamp: timestamp,
+      message: message // 디버깅용
     });
 
   } catch (error) {
-    console.error('Signature generation error:', error);
-    res.status(500).json({ 
+    return res.status(500).json({
       error: 'Internal server error',
-      details: error.message 
+      details: error.message
     });
   }
-};
+}
