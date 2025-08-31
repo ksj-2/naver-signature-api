@@ -1,0 +1,16 @@
+{
+  "name": "naver-cloud-signature",
+  "version": "1.0.0",
+  "description": "HMAC-SHA256 signature generator for Naver Cloud Platform APIs",
+  "main": "api/signature.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": "18.x"
+  },
+  "author": "",
+  "license": "MIT"
+}
